@@ -15,5 +15,5 @@ for line in fhand:
     # Printing out the statement replacing all underscores with a space,
     # converting the attendance into an integer, and the price into a float
     # with two decimal places
-    print("The attendance in {:s} was {:d} and the ticket price \
-was {:.2f}".format(city.replace("_", " "), int(attend), float(price)))
+    print("The attendance in {:s} was {:,d} and the ticket price \
+was ${:.2f}".format(city.replace("_", " "), int(attend), float(price)))
