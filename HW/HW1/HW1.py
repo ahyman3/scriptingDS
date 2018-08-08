@@ -41,30 +41,61 @@ if __name__ == "__main__":
     #Create a boxplot of the average gift amount by zipcode, separated by
     #the gender dummy variable
     genList = list(set(donors["gender dummy"]))
-    #
+    #Creating a dictionary to organize the means for each zip and gender
     meanGift = {}
+    #For each of the zip codes in the zip code list
     for zip in zip_labels:
+        #with the zip code as the key, create an empty dictionary
         meanGift[zip] = {}
+        #For each gender in the gender list
         for gender in genList:
+            #find all the rows that have the same zip code as zip and the
+            #same gender as the gender and retrieve the AVGGIFT
             allAvg = donors.loc[(donors["zip_all"] == zip) & \
                 (donors["gender dummy"] == gender), "AVGGIFT"]
+            #In the dictionary index the zipcode and gender and place the
+            #average of the number in the dictionary
             meanGift[zip][gender] = np.mean(allAvg)
+    #initializing the name of the output file
     outfile = 'genderZipGift.csv'
+    #write a new csv file called genderZipGift
     with open(outfile, "w") as outcsv:
+        #initializing the csv writer with the opened out file
         csvwriter = csv.writer(outcsv)
+        #Writing the title on the first row
         csvwriter.writerow(["Average gift by Gender within Zipcode"])
+        #Skipping two rows
         csvwriter.writerow([])
         csvwriter.writerow([])
+        #in the zip_labels list, insert an empty string in the 0 index
+        #to format the headers of the zip code
         zip_labels.insert(0, "")
+        #write the labels for the zip code skipping the first column
         csvwriter.writerow(zip_labels)
+        #For each of the genders in the gender list
         for gender in genList:
+            #creating the gender label for the table in the list
             genAvg = ["gender {:d}".format(gender)]
+            #For each zip code
             for zip in zip_labels:
+                #There is an error with the empty string, so catching error
                 try:
+                    #Appending the mean AVGGIFT for each gender to the genAvg list
                     genAvg.append(meanGift[zip][gender])
                 except KeyError:
+                    #If there is an error, next in the zip_label
                     continue
+            #After looping through the zip codes write the row in the csv file
+            #that has the averages for that gender dummy
             csvwriter.writerow(genAvg)
+        #After looping through the genders, close the file
         outcsv.close()
-    sns.boxplot(x = 'zip_all', y = "AVGGIFT", hue = "gender dummy", data = donors)
+    #Create the boxplot with the zip code as the x-axis and the average gift
+    #as the y-axis in the order of the zip_labels (except the ""). For each
+    #zip code, also separate out by the gender in the zip code and use the
+    #donors data frame as the source
+    sns.boxplot(x = 'zip_all', y = "AVGGIFT", order = zip_labels[1:], \
+        hue = "gender dummy", data = donors)
+    #Show the plot
     plt.show()
+    
