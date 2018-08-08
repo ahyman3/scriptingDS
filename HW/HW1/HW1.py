@@ -12,6 +12,8 @@ the distribution look like by gender
 Answer: We will create a csv file that outputs the mean of the average gift for
 each gender number within each zipcode. We will also create a boxplot of the
 average gift for each gender in each of the zip codes to show the spread
+
+2. Which income to housing value category is 
 '''
 
 import csv                          #Reading the csv
@@ -27,6 +29,9 @@ if __name__ == "__main__":
         "WEALTH", "HV", "Icmed", "Icavg", "IC15", "NUMPROM", "RAMNTALL",
         "MAXRAMNT", "LASTGIFT", "totalmonths", "TIMELAG", "AVGGIFT", "TARGET_B",
         "TARGET_D"]
+
+    ##Question 1
+
     #Converting donor data into data frame
     donors = pd.read_csv("Donors_Data.csv")
     #List of all the dummy zip code columns
@@ -98,4 +103,3 @@ if __name__ == "__main__":
         hue = "gender dummy", data = donors)
     #Show the plot
     plt.show()
-    
