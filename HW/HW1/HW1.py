@@ -9,11 +9,16 @@ Questions:
 1. How much are people in each zipcode donating to the university, and what does
 the distribution look like by gender
 
-Answer: We will create a csv file that outputs the mean of the average gift for
+Approach: We will create a csv file that outputs the mean of the average gift for
 each gender number within each zipcode. We will also create a boxplot of the
 average gift for each gender in each of the zip codes to show the spread
 
-2. Which income to housing value category is 
+2. Does homeownership have an effect on the independent income variable in terms
+in terms of the the response variable of lifetime donations to the school?
+
+Approach: create a table for each of the income levels and produce a table that
+includes the min, max, mean, median, sd of RAMNTALL for both categories of
+homeowners and provide a boxplot
 '''
 
 import csv                          #Reading the csv
@@ -24,11 +29,6 @@ import numpy as np                  #For statistics
 
 
 if __name__ == "__main__":
-    keys = ["Row Id", "Row Id.", "zipconvert_2", "zipconvert_3", "zipconvert_4",
-        "zipconvert_5", "homeowner dummy", "NUMCHLD", "INCOME", "gender dummy",
-        "WEALTH", "HV", "Icmed", "Icavg", "IC15", "NUMPROM", "RAMNTALL",
-        "MAXRAMNT", "LASTGIFT", "totalmonths", "TIMELAG", "AVGGIFT", "TARGET_B",
-        "TARGET_D"]
 
     ##Question 1
 
@@ -101,5 +101,109 @@ if __name__ == "__main__":
     #donors data frame as the source
     sns.boxplot(x = 'zip_all', y = "AVGGIFT", order = zip_labels[1:], \
         hue = "gender dummy", data = donors)
-    #Show the plot
-    plt.show()
+    #Saving the figure
+    plt.savefig("zipBoxplot.png")
+
+    ##Question 2
+    #Create a dictionary for keeping track of statisitcs
+    incomeHoStats = {}
+    #list of stats we will calculate
+    stats = ["count", "min", "max", "median", "mean", "sd", "Total Donations"]
+    #List of all unique income levels
+    incomeLevels = list(set(donors["INCOME"]))
+    #categories for homeowners
+    homeowner = [0,1]
+    #Looping through incomeLevels
+    for level in incomeLevels:
+        #Create a dictionary inside of the dictionary with the income level as
+        #the key to that dictionary
+        incomeHoStats[level] = {}
+        #inner looping through the homewoner status creating a dictionary for
+        #each level of homeownership inside the dictionary created for the income
+        #level main dict -> income level -> homeowner status
+        for HOStatus in homeowner:
+            #Creating an empty dictionary in the homeowner status dict to
+            #contain the statisitcs income level -> homestatus -> statisitc
+            incomeHoStats[level][HOStatus] = {}
+            #indexing in pandas the rows that have the have the same income
+            #and same homeowner status as specified by the loop above
+            tempFrame = donors.loc[(donors["INCOME"] == level) & \
+                (donors["homeowner dummy"] == HOStatus)]
+            #Storing the count of instances in the count key
+            incomeHoStats[level][HOStatus]["count"] = len(tempFrame)
+            #Storing the minimum of instances in the min key
+            incomeHoStats[level][HOStatus]["min"] = min(tempFrame["RAMNTALL"])
+            #Storing the maximum of instances in the max key
+            incomeHoStats[level][HOStatus]["max"] = max(tempFrame["RAMNTALL"])
+            #Storing the mean of instances in the mean key
+            incomeHoStats[level][HOStatus]["mean"] = np.mean(tempFrame["RAMNTALL"])
+            #Storing the median of instances in the median key
+            incomeHoStats[level][HOStatus]["median"] = np.median(tempFrame["RAMNTALL"])
+            #Storing the sd of instances in the sd key
+            incomeHoStats[level][HOStatus]["sd"] = np.std(tempFrame["RAMNTALL"])
+            #Storing the total $ amount of donations in that class to the Total
+            #Donations key
+            incomeHoStats[level][HOStatus]["Total Donations"] = sum(tempFrame["RAMNTALL"])
+    #initializing the name of the second out file
+    outfile2 = "incomeHomeownerDonations.csv"
+    #writing the csv file for an output
+    with open(outfile2, "w") as csvout2:
+        #initializing the csv writer
+        csvwriter = csv.writer(csvout2)
+        #Creating a title for the file
+        csvwriter.writerow(["Lifetime Donation Statistics"])
+        #Leaving a space
+        csvwriter.writerow([""])
+        #Writing a title for the table
+        csvwriter.writerow(["Lifetime Donations for Non-Homeowners"])
+        #initializing the header for the table
+        header = ["Income Levels"]
+        #extending the header list to include the income levels
+        header.extend(incomeLevels)
+        #Writing the header
+        csvwriter.writerow(header)
+        #for each of the statistics in stats
+        for stat in stats:
+            #Start an empty list
+            statRow = []
+            #for each income level
+            for income in incomeLevels:
+                #in the dictionary using income level -> homeowner status -> statistic
+                #find the statisitc for the group and append it to the statRow
+                #list
+                statRow.append(incomeHoStats[income][0][stat])
+            #Add the name of the statvto the 0 index of the statRow list
+            statRow.insert(0, stat)
+            #Write the row in the csv file
+            csvwriter.writerow(statRow)
+        #Leaving a blank row to separate the table for homeowner table
+        csvwriter.writerow([""])
+        #writing the title in the csv file
+        csvwriter.writerow(["Lifetime Donations for Homeowners"])
+        #Writing the header for the second table
+        csvwriter.writerow(header)
+        #looping through each statisitc
+        for stat in stats:
+            #Create an empty list to place the statistic for each income level
+            statRow = []
+            #for each income level
+            for income in incomeLevels:
+                #find the statistic using income level -> homeownership -> stat
+                #and append it to the statRow list
+                statRow.append(incomeHoStats[income][1][stat])
+            #add the statistic name to the 0 index of the list
+            statRow.insert(0, stat)
+            #Write the row in the csv file that has the statistic name followed by
+            #the statistic for the omeowners in  the corresponding income level
+            csvwriter.writerow(statRow)
+        #close the file
+        csvout2.close()
+    #Create a boxplot that has the distribution of total donations for each level
+    #of INCOME separated by homeowner status
+    bp = sns.boxplot(x = "INCOME", y = "RAMNTALL", hue = "homeowner dummy", data = donors)
+    #getting the handle and labels for the legend
+    handles, labels = bp.get_legend_handles_labels()
+    #Getting rid of the duplicates and settingt the labels
+    l = plt.legend(handles[0:2], ["Non-Homeowner", "Homeowner"], loc=0, borderaxespad=0.)
+    #Saving the figure
+    plt.savefig("LifetimeDonations_Income.png")
